@@ -19,9 +19,9 @@ signature_cache = caches['signature']
 
 
 @shared_task(time_limit=5, autoretry_for=(TimeLimitExceeded,), max_retries=3)
-def generate_pdf(signature_id):
+def generate_pdf(user_id):
 
-    signature = Signature.objects.filter(id=signature_id).select_related('user').first()
+    signature = Signature.objects.filter(user_id=user_id).select_related('user').first()
 
     try:
 
@@ -42,9 +42,9 @@ def generate_pdf(signature_id):
         signature.save()
 
         # remove from cache
-        signature_cache.delete_pattern(f'{signature.user.id}_{signature_id}')
+        signature_cache.delete_pattern(f'{signature.user.id}')
 
     except MaxRetriesExceededError as e:
         # remove from cache
-        signature_cache.delete_pattern(f'{signature.user.id}_{signature_id}')
+        signature_cache.delete_pattern(f'{signature.user.id}')
         raise e

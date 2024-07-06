@@ -2,7 +2,7 @@ from celery.result import AsyncResult
 from django.core.cache import caches
 from django.shortcuts import redirect
 from rest_framework import status
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,24 +18,28 @@ from apps.signature.tasks import generate_pdf
 signature_cache = caches['signature']
 
 
-class UploadSignatureView(CreateAPIView):
-    permission_classes = (IsAuthenticated,)
+class UploadSignatureView(CreateAPIView, UpdateAPIView):
+    queryset = Signature.objects.all()
     serializer_class = SignatureUploadSerializer
+    http_method_names = ('post', 'put')
+
+    def get_object(self):
+        return Signature.objects.filter(user_id=self.request.user.id).first()
 
 
 class PDFAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, signature_id):
+    def get(self, request):
 
         # database check
         signature = Signature.objects.filter(
-            id=signature_id, user_id=request.user.id, pdf__isnull=False).exclude(pdf='').first()
+            user_id=request.user.id, pdf__isnull=False).exclude(pdf='').first()
         if signature:
             return redirect(signature.pdf.url)
 
         # cache check
-        task_id = signature_cache.get(f'{request.user.id}_{signature_id}')
+        task_id = signature_cache.get(f'{request.user.id}')
         if task_id:
             task = AsyncResult(task_id)
 
@@ -47,6 +51,6 @@ class PDFAPIView(APIView):
 
         # run celery task to generate pdf
         else:
-            task = generate_pdf.delay(signature_id)
-            signature_cache.set(f'{request.user.id}_{signature_id}', task.id, SIGNATURE_TIMEOUT)
+            task = generate_pdf.delay(request.user.id)
+            signature_cache.set(f'{request.user.id}', task.id, SIGNATURE_TIMEOUT)
             return Response({'detail': 'PDF generation task queued!'}, status=status.HTTP_202_ACCEPTED)

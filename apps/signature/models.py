@@ -9,7 +9,7 @@ from apps.signature.utils import signature_upload_path
 
 class Signature(models.Model):
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='signatures')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='signature')
 
     image = models.ImageField(upload_to=signature_upload_path)
     image_checksum = models.CharField(max_length=64)
