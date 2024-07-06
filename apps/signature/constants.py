@@ -1,0 +1,2 @@
+# SIGNATURE_TIMEOUT = 5 * 60  # 5 minutes
+SIGNATURE_TIMEOUT = 1000  # Seconds

@@ -1,0 +1,16 @@
+*.pyc
+__pycache__/
+
+venv/
+
+Dockerfile
+docker-compose.yml
+
+#.env
+.env.example
+
+static
+media
+nginx
+venv
+*.sqlite3
