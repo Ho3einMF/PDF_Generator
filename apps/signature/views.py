@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from apps.signature.constants import SIGNATURE_TIMEOUT
 from apps.signature.models import Signature
 from apps.signature.serializers import SignatureUploadSerializer
-from apps.signature.tasks import generate_pdf
+from apps.signature.tasks import pdf_generate, pdf_task_manger
 
 # Create your views here.
 
@@ -51,6 +51,6 @@ class PDFAPIView(APIView):
 
         # run celery task to generate pdf
         else:
-            task = generate_pdf.delay(request.user.id)
+            task = pdf_task_manger.delay(user_id=request.user.id)
             signature_cache.set(f'{request.user.id}', task.id, SIGNATURE_TIMEOUT)
             return Response({'detail': 'PDF generation task queued!'}, status=status.HTTP_202_ACCEPTED)
