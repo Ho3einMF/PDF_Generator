@@ -14,6 +14,6 @@ def signature_upload_path(instance, filename):
     return f'{get_random_string(length=16)}{extension}'
 
 
-def generate_pdf_path(signature_path):
-    basename = os.path.splitext(signature_path)[0]
+def generate_pdf_name(signature_image_name):
+    basename = os.path.splitext(signature_image_name)[0]
     return f'{basename}.pdf'
