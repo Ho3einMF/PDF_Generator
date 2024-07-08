@@ -8,9 +8,10 @@ from django.conf import settings
 from django.core.cache import caches
 from pypdf import PdfReader
 
-from apps.signature.exceptions import PDFGenerationFailed
 from apps.signature.models import Signature
 from apps.signature.utils import generate_pdf_name, generate_pdf_file
+from apps.signature.validators import check_numbers_of_pdf_pages, check_pdf_user_full_name, check_pdf_today_date, \
+    check_numbers_of_pdf_images
 
 signature_cache = caches['signature']
 
@@ -57,32 +58,20 @@ def pdf_check(pdf_generate_results):
     pdf = PdfReader(pdf_path)
 
     # Number of pages
-    number_of_pages = len(pdf.pages)
-    if number_of_pages != 1:
-        raise PDFGenerationFailed(f'Incorrect number of pages: {number_of_pages}')
+    check_numbers_of_pdf_pages(expected_page_number=1, pdf_page_number=len(pdf.pages))
 
     # Text of the page
     text = pdf.pages[0].extract_text()
     pdf_user_full_name, pdf_today = text.split('\n')[:2]
 
     # Full name
-    if expected_user_full_name != pdf_user_full_name:
-        raise PDFGenerationFailed(f'Incorrect full name: '
-                                  f'expected_user_full_name: {expected_user_full_name} '
-                                  f'pdf_user_full_name: {pdf_user_full_name}')
+    check_pdf_user_full_name(expected_user_full_name, pdf_user_full_name)
 
-    # Today
-    year, month, day = map(int, pdf_today.split(' / '))
-    pdf_today = jdatetime.date(year, month, day).strftime('%Y / %m / %d')
-
-    if expected_today != pdf_today:
-        raise PDFGenerationFailed(f'Incorrect date today: '
-                                  f'expected_today: {expected_today} pdf_today: {pdf_today}')
+    # Today date
+    check_pdf_today_date(expected_today_date=expected_today, pdf_today_date=pdf_today)
 
     # Signature image
-    number_of_images = len(pdf.pages[0].images)
-    if number_of_images != 1:
-        raise PDFGenerationFailed(f'Signature image not inserted: number_of_images Images: {number_of_images}')
+    check_numbers_of_pdf_images(expected_image_number=1, pdf_image_number=len(pdf.pages[0].images))
 
     print('pdf_check success')
 
