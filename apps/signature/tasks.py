@@ -7,14 +7,10 @@ from celery.exceptions import MaxRetriesExceededError
 from django.conf import settings
 from django.core.cache import caches
 from pypdf import PdfReader
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.utils import ImageReader
-from reportlab.pdfgen import canvas
 
 from apps.signature.exceptions import PDFGenerationFailed
 from apps.signature.models import Signature
-from apps.signature.utils import generate_pdf_name
-
+from apps.signature.utils import generate_pdf_name, generate_pdf_file
 
 signature_cache = caches['signature']
 
@@ -22,24 +18,17 @@ signature_cache = caches['signature']
 @shared_task(autoretry_for=(TimeLimitExceeded,), max_retries=2, default_retry_delay=1)
 def pdf_generate(user_id):
 
-    print('pdf_generate exception')
+    print('pdf_generate start')
 
     signature = Signature.objects.filter(user_id=user_id).select_related('user').first()
 
     try:
         user_full_name = signature.user.get_full_name()
         today = jdatetime.date.today().strftime('%Y / %m / %d')
-
-        # Generate a PDF file
         pdf_name = generate_pdf_name(signature.image.name)
         pdf_path = os.path.join(settings.MEDIA_ROOT, pdf_name)
-        c = canvas.Canvas(pdf_path, pagesize=letter)
 
-        c.drawString(100, 700, user_full_name)
-        c.drawString(100, 600, today)
-        c.drawImage(ImageReader(signature.image.path), 100, 400, mask='auto', width=100, height=100)
-
-        c.save()
+        generate_pdf_file(pdf_path, user_full_name, today, signature.image.path)
 
         print('pdf_generate success')
         return {
@@ -93,7 +82,7 @@ def pdf_check(pdf_generate_results):
     # Signature image
     number_of_images = len(pdf.pages[0].images)
     if number_of_images != 1:
-        raise PDFGenerationFailed(f'Signature image not inserted: #Images: {number_of_images}')
+        raise PDFGenerationFailed(f'Signature image not inserted: number_of_images Images: {number_of_images}')
 
     print('pdf_check success')
 
