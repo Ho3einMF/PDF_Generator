@@ -20,11 +20,6 @@ class SignatureUploadSerializer(serializers.ModelSerializer):
 
         return data
 
-    def create(self, validated_data):
-        if Signature.objects.filter(user=validated_data['user']).exists():
-            raise ValidationError('Already created.')
-        return super().create(validated_data)
-
     class Meta:
         model = Signature
         fields = ('image',)
