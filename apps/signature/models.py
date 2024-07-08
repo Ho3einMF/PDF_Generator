@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser, User
 from django.db import models
 
+from apps.signature.mangers import SignatureManager
 from apps.signature.utils import signature_upload_path
 
 
@@ -15,3 +16,5 @@ class Signature(models.Model):
     image_checksum = models.CharField(max_length=64)
 
     pdf = models.FileField(blank=True, null=True)
+
+    objects = SignatureManager()

@@ -76,9 +76,8 @@ def pdf_check(pdf_generate_results):
     print('pdf_check success')
 
     # Save pdf file to database
-    signature = Signature.objects.filter(id=pdf_generate_results['signature_id']).first()
-    signature.pdf = pdf_generate_results['pdf_name']
-    signature.save()
+    signature = Signature.objects.save_pdf(signature_id=pdf_generate_results['signature_id'],
+                                           pdf_name=pdf_generate_results['pdf_name'])
 
     # remove from cache
     signature_cache.delete_pattern(f'{signature.user.id}')
