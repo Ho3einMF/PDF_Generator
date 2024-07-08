@@ -7,4 +7,3 @@ class SignatureManager(models.Manager):
         signature = self.filter(id=signature_id).first()
         signature.pdf = pdf_name
         signature.save()
-        return signature

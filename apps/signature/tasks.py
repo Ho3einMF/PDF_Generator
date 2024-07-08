@@ -13,6 +13,7 @@ from apps.signature.utils import generate_pdf_name, generate_pdf_file
 from apps.signature.validators import check_numbers_of_pdf_pages, check_pdf_user_full_name, check_pdf_today_date, \
     check_numbers_of_pdf_images
 
+
 signature_cache = caches['signature']
 
 
@@ -34,6 +35,7 @@ def pdf_generate(user_id):
         print('pdf_generate success')
         return {
             'signature_id': signature.id,
+            'user_id': signature.user.id,
             'pdf_name': pdf_name,
             'pdf_path': pdf_path,
             'expected_user_full_name': user_full_name,
@@ -76,11 +78,11 @@ def pdf_check(pdf_generate_results):
     print('pdf_check success')
 
     # Save pdf file to database
-    signature = Signature.objects.save_pdf(signature_id=pdf_generate_results['signature_id'],
-                                           pdf_name=pdf_generate_results['pdf_name'])
+    Signature.objects.save_pdf(signature_id=pdf_generate_results['signature_id'],
+                               pdf_name=pdf_generate_results['pdf_name'])
 
     # remove from cache
-    signature_cache.delete_pattern(f'{signature.user.id}')
+    signature_cache.delete_pattern(f'{pdf_generate_results["user_id"]}')
 
 
 @shared_task(bind=True)
