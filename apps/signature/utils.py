@@ -1,7 +1,6 @@
 import hashlib
 import os
 
-from django.conf import settings
 from django.utils.crypto import get_random_string
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import ImageReader

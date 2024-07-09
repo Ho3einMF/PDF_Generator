@@ -19,6 +19,7 @@ kombu==5.3.7
 packaging==24.1
 pillow==10.4.0
 prompt_toolkit==3.0.47
+pypdf==4.2.0
 python-dateutil==2.9.0.post0
 redis==5.0.7
 reportlab==4.2.2
